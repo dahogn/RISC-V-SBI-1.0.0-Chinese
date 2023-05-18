@@ -208,7 +208,13 @@ SBI规范并未指定硬件发现的方法。监管软件必须依赖其他行�
 •  a 6 编码SBI函数ID（FID），对于任何在a 7 中编码的SBI扩展，其定义在SBI v 0. 2 之后。
 •  在SBI调用期间，除了a 0 和a 1 寄存器外，所有寄存器都必须由被调用方保留。
 •  SBI函数必须在a 0 和a 1 中返回一对值，其中a 0 返回错误代码。类似返回C结构体。
-
+```
+struct sbiret
+{
+   long error;
+   long value;
+}
+```
 
 为了保持兼容性，SBI扩展ID（EID）和SBI函数ID（FID）被编码为有符号的 32 位整数。当以寄存器形式传递时，遵循上述标准的调用约定规则。
 
@@ -257,84 +263,81 @@ SBI规范并未指定硬件发现的方法。监管软件必须依赖其他行�
 基本扩展旨在尽可能简洁。因此，它仅包含用于探测可用的SBI扩展以及查询SBI版本的功能。基本扩展中的所有函数必须由所有SBI实现支持，因此没有定义错误返回值。
 
 ### 4.1 函数:获取SBI规范版本 (FID #0)
-
-
+```
+struct sbiret sbi_get_spec_version(void);
+```
 返回当前的SBI规范版本。此函数必定成功。SBI规范的次版本号编码在低 24 位中，主版本号编码在接下来的 7 位中。第 31 位必须为 0 ，保留用于未来扩展。
 
 ### 4.2 函数: 获取SBI实现标识符 (FID #1)
+```
+struct sbiret sbi_get_impl_id(void);
 
-
+```
 返回当前 SBI 实现的标识符，每个 SBI 实现的标识符都是不同的。这个标识符旨在让软件探测 SBI 实现的特殊问题或特点。
 
 ### 4.3 函数:获取SBI实现版本(FID #2)
-
-
+```
+struct sbiret sbi_get_impl_version(void);
+```
 返回当前 SBI 实现的版本。该版本号的编码是特定于 SBI 实现的。
 
 ### 4.4 函数: 探测SBI扩展功能 (FID #3)
-
-
+```
+struct sbiret sbi_probe_extension(long extension_id);
+```
 如果给定的 SBI 扩展 ID (EID) 不可用，则返回 0 ；如果可用，且实现定义为其他非零值则返回 1 。
 
 ### 4.5 函数: 获取机器供应商标识符 (FID #4)
-
+```
+struct sbiret sbi_get_mvendorid(void);
+```
 返回一个合法的 mvendorid CSR 值，其中 0 总是一个合法的值。mvendorid CSR 是一个用于标识
 机器供应商的控制状态寄存器，它用于表示底层硬件的供应商或制造商。
 
-
-###4. 6 函数: 获取机器体系结构标识符 (FID # 5 )| Page 10
-
 ### 4.6 函数: 获取机器体系结构标识符 (FID #5)
-
+```
+struct sbiret sbi_get_marchid(void);
+```
 返回一个在 marchid CSR 中合法的值，其中 0 总是合法的值。marchid CSR是RISC-V架构中
 的一个控制状态寄存器，用于标识机器体系结构。
-### 4.7 函数: 获取机器实现标识符ID (FID #6)
 
+### 4.7 函数: 获取机器实现标识符ID (FID #6)
+```
+struct sbiret sbi_get_mimpid(void);
+```
 返回一个在 mimpid CSR 中合法的值，而且对于该 CSR， 0 始终是一个合法的值。
 
 ### 4.8 函数列表
 
+表3. 基础函数列表
 
-表^^3. 基础函数列表^
-
-函数名 SBI 版本 FID^ EID^
-
-sbi_get_sbi_spec_version 0. 2 0 0 x 10
-sbi_get_sbi_impl_id 0. 2 1 0 x 10
-sbi_get_sbi_impl_version 0. 2 2 0 x 10
-sbi_probe_extension 0. 2 3 0 x 10
-sbi_get_mvendorid 0. 2 4 0 x^10
-sbi_get_marchid 0. 2 5 0 x 10
-sbi_get_mimpid 0. 2 6 0 x 10
+|函数名 |SBI版本 |FID|EID|
+|----|----|-----|----|
+|sbi_get_sbi_spec_version| 0. 2| 0| 0 x 10|
+|sbi_get_sbi_impl_id| 0. 2| 1| 0 x 10|
+|sbi_get_sbi_impl_version| 0. 2| 2| 0 x 10|
+|sbi_probe_extension| 0. 2| 3 |0 x 10|
+|sbi_get_mvendorid| 0. 2| 4 |0 x 10|
+|sbi_get_marchid |0. 2| 5 |0 x 10|
+|sbi_get_mimpid |0. 2| 6| 0 x 10|
 
 ### 4.9 SBI 实现标识符
 
 表4. SBI实现IDs
-SBI实现ID 名称
-0 Berkeley Boot Loader (BBL)
-1 OpenSBI
-2 Xvisor
+|SBI实现ID| 名称|
+|-----|-----|
+|0 |Berkeley Boot Loader (BBL)|
+|1 |OpenSBI|
+|2| Xvisor|
+|3| KVM|
+|4| RustSBI|
+|5| Diosix|
+|6|Coffer|
 
-
-```
-4.9. SBI 实现 IDs | Page 11
-```
-(^)
-SBI实现ID 名称
-3 KVM
-4 RustSBI
-5 Diosix
-6 Coffer
-
-
-```
-5. 1. 扩展: 设置时钟 | Page 12
-```
 ## 章节5. 旧版扩展 (EIDs #0x00- #0x0F)
 
-```
+
 传统的 SBI 扩展与 SBI v 0. 2 （或更高版本）规范相比，遵循略微不同的调用约定，其中：
-```
 - a 6 寄存器中的 SBI 函数ID 字段被忽略，因为这些被编码为多个 SBI 扩展 ID。
 - a 1 寄存器中不返回任何值。
 - 在 SBI 调用期间，除 a 0 寄存器外的所有寄存器都必须由被调用者保留。
